@@ -26,7 +26,7 @@ SPLIT="test"
 
 # MODEL_PATH=/ndata/yuansui/graph-constrained-reasoning/save_models/GCR-Qwen3-0.6B
 MODEL_PATH=Qwen/Qwen3-0.6B
-MODEL_NAME=$(basename ${MODEL_PATH})
+MODEL_NAME=$(basename "$MODEL_PATH")
 N_THREAD=10
 REASONING_PATH=/ndata/yuansui/graph-constrained-reasoning/results/GenPaths/ROG-webqsp/GCR-Qwen2-0.5B-Instruct/test/zero-shot-group-beam-k10-index_len2/predictions.jsonl
 
@@ -39,7 +39,7 @@ for DATA in ${DATA_LIST}; do
     --model_path ${MODEL_PATH} \
     --reasoning_path ${REASONING_PATH} \
     --add_path True \
-    # --use_think True \
     -n ${N_THREAD} \
-    --test True \
+    --use_think True \
+    --test True
 done

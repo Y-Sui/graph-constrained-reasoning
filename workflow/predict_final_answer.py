@@ -339,7 +339,9 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--use_think", type=lambda x: (str(x).lower() == 'true'), default=False
     )
-    argparser.add_argument("--test", type=bool, default=False)
+    argparser.add_argument(
+        "--test", type=bool, default=False
+    )
     args, _ = argparser.parse_known_args()
 
     LLM = get_registed_model(args.model_name)
