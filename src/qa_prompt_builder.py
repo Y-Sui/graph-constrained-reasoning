@@ -12,13 +12,13 @@ PROMPT_TEMPLATE = """{input}
 {instruction}"""
 
 class GraphConstrainedPromptBuilder(object):
-    def __init__(self, tokenizer, prompt="zero-shot", undirected = False,index_path_length=2, add_rule=False) -> None:
+    def __init__(self, tokenizer, prompt_mode="zero-shot", undirected = False,index_path_length=2, add_rule=False) -> None:
         self.tokenizer = tokenizer
-        self.prompt = prompt
+        self.prompt_mode = prompt_mode
         self.undirected = undirected
         self.index_path_length = index_path_length
         self.add_rule = add_rule
-        self.prompt_template = self.get_prompt_template(self.prompt)
+        self.prompt_template = self.get_prompt_template(self.prompt_mode)
 
     def get_prompt_template(self, template_name):
         try:
@@ -197,6 +197,14 @@ class PathGenerationWithAnswerPromptBuilder(JointReasoningPromptBuilder):
 {choices}
 """
 
+    ZERO_SHOT_THINK_PROMPT = """Reasoning path is a sequence of triples in the KG that connects the topic entities in the question to answer entities. Given a question, please generate some reasoning paths in the KG starting from the topic entities to answer the question. generate the corresponding /think process during your generation
+
+# Question: 
+{question}
+# Topic entities: 
+{entities}
+"""
+
 class RetrievalPromptBuilder(GraphConstrainedPromptBuilder):
     entity_template = '''Question: {question}
 Please generate entities that are relevant to the question.''' 
@@ -330,6 +338,7 @@ class PromptBuilder(object):
         maximun_token=4096,
         use_rog_prompt = False,
         use_gcr = False,
+        use_think = False,
         tokenize: Callable = lambda x: len(x),
     ):
         self.add_path = add_path
@@ -345,6 +354,7 @@ class PromptBuilder(object):
         self.each_line = each_line
         self.use_rog_prompt = use_rog_prompt
         self.use_gcr = use_gcr
+        self.use_think = use_think
         
         if use_rog_prompt:
             self.SAQ_INSTRUCTION = self.ROG_SAQ_INSTRUCTION
@@ -513,7 +523,9 @@ class PromptBuilder(object):
                 )
                 + input
             )
-   
+
+        if self.use_think:
+            instruction = instruction + " /think during your generation."
         input = PROMPT_TEMPLATE.format(instruction=instruction, input=input)
 
         return input

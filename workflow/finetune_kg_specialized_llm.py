@@ -241,6 +241,7 @@ def train():
     trainer.train(resume_from_checkpoint=checkpoint)
 
     trainer.save_model(training_args.output_dir)
+    # trainer.push_to_hub(training_args.output_dir)
 
 
 if __name__ == "__main__":

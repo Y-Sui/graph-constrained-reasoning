@@ -165,6 +165,10 @@ def main(args, LLM):
     input_file = os.path.join(args.data_path, args.d)
     # Load dataset
     dataset = load_dataset(input_file, split=args.split)
+    
+    if args.test:
+        # only consider the top 5 samples for testing
+        dataset = dataset.select(range(5))
     if args.add_path:
         if args.use_all:
             max_length = 2
@@ -235,6 +239,7 @@ def main(args, LLM):
         tokenize=model.token_len,
         use_rog_prompt=args.use_rog_prompt,
         each_line=args.each_line,
+        use_think=args.use_think
     )
 
     print("Prepare pipline for inference...")
@@ -245,7 +250,7 @@ def main(args, LLM):
         json.dump(args.__dict__, f, indent=2)
 
     fout, processed_list = get_output_file(
-        os.path.join(output_dir, f"predictions.jsonl"), force=args.force
+        os.path.join(output_dir, "predictions.jsonl"), force=args.force
     )
 
     if args.n > 1:
@@ -331,6 +336,10 @@ if __name__ == "__main__":
     argparser.add_argument(
         '--use_gcr', type=lambda x: (str(x).lower() == 'true'), default=False
     )
+    argparser.add_argument(
+        "--use_think", type=lambda x: (str(x).lower() == 'true'), default=False
+    )
+    argparser.add_argument("--test", type=bool, default=False)
     args, _ = argparser.parse_known_args()
 
     LLM = get_registed_model(args.model_name)

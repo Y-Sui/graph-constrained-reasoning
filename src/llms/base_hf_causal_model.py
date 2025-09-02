@@ -148,7 +148,8 @@ class HfCausalModel(BaseLanguageModel):
                 attention_mask = attention_mask,
                 generation_config=self.generation_cfg,
                 return_dict_in_generate=True,
-                pad_token_id=self.tokenizer.eos_token_id
+                pad_token_id=self.tokenizer.eos_token_id,
+                do_sample=self.generation_cfg.do_sample
             )
         except Exception as e:
             print(e)

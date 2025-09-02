@@ -1,4 +1,5 @@
-DATASET_LIST="data/shortest_path_index/RoG-webqsp/train data/shortest_path_index/RoG-cwq/train"
+# DATASET_LIST="data/shortest_path_index/ROG-webqsp/train data/shortest_path_index/RoG-cwq/train"
+DATASET_LIST="data/shortest_path_index/ROG-webqsp/train"
 
 # Lora
 # BATCH_SIZE=50
@@ -40,16 +41,22 @@ CONFIG="accelerate_configs/deepspeed_zero3.yaml"
 # RESPONSE_TEMPLATE="[/INST]"
 # CONFIG="accelerate_configs/deepspeed_zero3.yaml"
 
-MODEL_PATH=meta-llama/Meta-Llama-3.1-8B-Instruct
+# MODEL_PATH=meta-llama/Meta-Llama-3.1-8B-Instruct
+# ATTN_IMP=flash_attention_2
+# RESPONSE_TEMPLATE="<|start_header_id|>assistant<|end_header_id|>"
+# CONFIG="accelerate_configs/deepspeed_zero3.yaml"
+
+MODEL_PATH=Qwen/Qwen3-0.6B
 ATTN_IMP=flash_attention_2
-RESPONSE_TEMPLATE="<|start_header_id|>assistant<|end_header_id|>"
+RESPONSE_TEMPLATE="<|im_start|>assistant"
 CONFIG="accelerate_configs/deepspeed_zero3.yaml"
 
 
 SAVE_PATH=save_models/GCR-$(basename "$MODEL_PATH")
 SAVE_NAME=$(basename "$SAVE_PATH")
 
-accelerate launch --config_file ${CONFIG} workflow/finetune_kg_specialized_llm.py \
+
+CUDA_VISIBLE_DEVICES=0,1 nohup accelerate launch --config_file ${CONFIG} workflow/finetune_kg_specialized_llm.py \
     --data_path_list ${DATASET_LIST}  \
     --model_name_or_path ${MODEL_PATH} \
     --output_dir ${SAVE_PATH} \
@@ -75,4 +82,6 @@ accelerate launch --config_file ${CONFIG} workflow/finetune_kg_specialized_llm.p
     --neftune_noise_alpha 5 \
     --attn_implementation ${ATTN_IMP} \
     --response_template "${RESPONSE_TEMPLATE}" \
-    --run_name ${SAVE_NAME}
+    --run_name ${SAVE_NAME} \
+    # --overwrite_output_dir \ # if there is a checkpoint and without the last checkpoint, it will be overwritten
+    2>&1 > ${SAVE_PATH}/train.log &

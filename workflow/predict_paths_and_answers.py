@@ -7,10 +7,15 @@ import os
 from datasets import load_dataset, Dataset
 from src.utils.qa_utils import eval_path_result_w_ans
 from src import utils
+import multiprocessing
 import json
 from multiprocessing import Pool
 from functools import partial
 from src.qa_prompt_builder import PathGenerationWithAnswerPromptBuilder
+
+# Set multiprocessing start method to 'spawn' for CUDA compatibility
+if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn', force=True)
 
 def merge_rule_result(qa_dataset, rule_dataset, n_proc=1, filter_empty=False):
     question_to_rule = dict()
@@ -91,8 +96,13 @@ def prediction(data, processed_list, input_builder, model):
 
 def main(args, LLM):
     input_file = os.path.join(args.data_path, args.d)
+    print("args: ", args)
     # Load dataset
     dataset = load_dataset(input_file, split=args.split)
+    
+    if args.test:
+        # only consider the top 5 samples for testing
+        dataset = dataset.select(range(5))
     post_fix = f"{args.prefix}{args.prompt_mode}-{args.generation_mode}-k{args.k}-index_len{args.index_path_length}"
     if args.add_rule:
         rule_postfix = args.rule_path.replace("/", "_").replace(".", "_")
@@ -164,7 +174,7 @@ if __name__ == "__main__":
     argparser.add_argument("--n", type=int, default=1, help="number of processes")
     argparser.add_argument("--undirected", type=lambda x: (str(x).lower() == 'true'), default=False)
     argparser.add_argument("--debug", action="store_true", help="print debug information")
-    argparser.add_argument("--prompt_mode", type=str, default="zero-shot", choices=["zero-shot", "mcq-zero-shot", "few-shot"])
+    argparser.add_argument("--prompt_mode", type=str, default="zero-shot", choices=["zero-shot", "mcq-zero-shot", "few-shot", "zero-shot-think"])
     argparser.add_argument("--filter_empty", action="store_true")
     argparser.add_argument("--add_rule", action="store_true")
     argparser.add_argument(
@@ -173,6 +183,7 @@ if __name__ == "__main__":
         default="results/gen_rule_path/webqsp_undirected/Llama-2-7b-chat-hf_align-spectoken-joint/test/predictions_3_False.jsonl",
     )
     argparser.add_argument("--prefix", type=str, default="")
+    argparser.add_argument("--test", type=bool, default=False)
 
     args, _  = argparser.parse_known_args()
     
